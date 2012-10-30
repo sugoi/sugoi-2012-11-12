@@ -17,8 +17,13 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:     Sugoi.Main
-  -- other-modules:       
-  source-dirs:         src
+                       Sugoi.Options
+                       Sugoi.Types
+  extensions:          TypeFamilies                     
+  ghc-options:         -Wall -O3 
+  hs-source-dirs:      src/
+
   build-depends:       base >=4.5
-                     , distributed-process
-                     , options-applicative 
+                     , CurryDB >= 0.1
+                     , distributed-process >= 0.4
+                     , optparse-applicative >= 0.4
