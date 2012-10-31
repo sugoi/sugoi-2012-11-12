@@ -26,6 +26,7 @@ library
                      , CurryDB >= 0.1
                      , data-default
                      , distributed-process >= 0.4
+                     , monad-control
                      , network-transport >= 0.3
                      , network-transport-tcp >= 0.3.1
                      , optparse-applicative >= 0.4

@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings #-}
 
 module Sugoi.Main where
 
@@ -6,6 +6,7 @@ import qualified Control.Distributed.Process as CH
 import qualified Control.Distributed.Process.Node as CH
 import qualified Control.Distributed.Process.Internal.Types as CH
 import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Trans.Control
 import           Data.Default (def)
 import qualified Database.Curry as DB
 import qualified Database.Curry.Storage as DB
@@ -21,7 +22,6 @@ rtable = CH.initRemoteTable
 dbConf :: DB.Config
 dbConf = def { DB.configPath = Just "sugoi.db" }
 
-type SugoiM v = DB.DBMT v CH.Process
 
 defaultMain :: IO ()
 defaultMain = do
@@ -33,11 +33,11 @@ defaultMain = do
         Left err -> print err
         Right transport -> do
           localNode <- CH.newLocalNode transport rtable
-          CH.runProcess localNode $ DB.runDBMT server
+          CH.runProcess localNode server
 
 
 
-server :: SugoiM Int ()
+server :: CH.Process ()
 server = do
   liftIO $ putStrLn "hello this is server"
 --   DB.runDBMT dbConf $ do
