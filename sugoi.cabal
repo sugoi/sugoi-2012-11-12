@@ -21,9 +21,9 @@ library
                        Sugoi.Types
   extensions:          TypeFamilies                     
   ghc-options:         -Wall -O3 
-  hs-source-dirs:      src/
 
   build-depends:       base >=4.5
                      , CurryDB >= 0.1
+                     , data-default
                      , distributed-process >= 0.4
                      , optparse-applicative >= 0.4
