@@ -40,10 +40,5 @@ defaultMain = do
 server :: CH.Process ()
 server = do
   liftIO $ putStrLn "hello this is server"
---   DB.runDBMT dbConf $ do
---     DB.transaction $ DB.insert "foo" (65::Int)
---   DB.runDBMT dbConf $ do
---     DB.transaction $ DB.insert "bar" (67::Int)
---   DB.runDBMT dbConf $ do
---     DB.transaction $ DB.insert "baz" (68::Int)
---     DB.saveToFile
+  liftIO $ DB.runDBMT dbConf $ do
+     DB.transaction $ DB.insert "bazzar" (68::Int)
