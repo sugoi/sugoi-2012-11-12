@@ -41,4 +41,7 @@ server :: CH.Process ()
 server = do
   liftIO $ putStrLn "hello this is server"
   liftIO $ DB.runDBMT dbConf $ do
-     DB.transaction $ DB.insert "bazzar" (68::Int)
+     DB.transaction $ DB.insert "alpha" (65::Int)
+  liftIO $ putStrLn "hello this is server"
+  liftIO $ DB.runDBMT dbConf $ do
+     DB.transaction $ DB.insert "beta" (66::Int)
