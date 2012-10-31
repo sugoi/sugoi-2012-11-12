@@ -25,6 +25,11 @@ dbConf = def { DB.configPath = Just "sugoi.db" }
 
 defaultMain :: IO ()
 defaultMain = do
+  DB.runDBMT dbConf $ liftBaseWith $ \runInBase -> do
+    print "wow"
+    runInBase $ DB.transaction $ DB.insert "charlie" (67::Int)
+    print "hi"
+
   argv <- getArgs
   case argv of
     [host,port] -> do
