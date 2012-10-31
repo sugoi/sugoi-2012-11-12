@@ -27,3 +27,11 @@ library
                      , data-default
                      , distributed-process >= 0.4
                      , optparse-applicative >= 0.4
+
+executable             example-server
+  ghc-options:         -Wall -O3 
+  hs-source-dirs:      examples/
+  main-is:             server.hs
+
+  build-depends:       base
+                     , Sugoi
