@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, RankNTypes #-}
 
 module Sugoi.Main where
 
@@ -26,27 +26,22 @@ dbConf = def { DB.configPath = Just "sugoi.db" }
 defaultMain :: IO ()
 defaultMain = do
   DB.runDBMT dbConf $ liftBaseWith $ \runInBase -> do
-    print "wow"
-    runInBase $ DB.transaction $ DB.insert "charlie" (67::Int)
-    print "hi"
-
-  argv <- getArgs
-  case argv of
-    [host,port] -> do
-      ret <- NTT.createTransport host port NTT.defaultTCPParameters
-      case ret of
-        Left err -> print err
-        Right transport -> do
-          localNode <- CH.newLocalNode transport rtable
-          CH.runProcess localNode server
+    argv <- getArgs
+    case argv of
+      [host,port] -> do
+        ret <- NTT.createTransport host port NTT.defaultTCPParameters
+        case ret of
+          Left err -> print err
+          Right transport -> do
+            localNode <- CH.newLocalNode transport rtable
+            CH.runProcess localNode (server runInBase)
 
 
 
-server :: CH.Process ()
-server = do
+server :: (RunInBase (DB.DBMT Int IO) IO) -> CH.Process ()
+server runInBase = do
   liftIO $ putStrLn "hello this is server"
-  liftIO $ DB.runDBMT dbConf $ do
-     DB.transaction $ DB.insert "alpha" (65::Int)
-  liftIO $ putStrLn "hello this is server"
-  liftIO $ DB.runDBMT dbConf $ do
-     DB.transaction $ DB.insert "beta" (66::Int)
+  liftIO $ runInBase $ DB.transaction $ DB.insert "alpha" (65::Int)
+  liftIO $ putStrLn "hello this is server 2"
+  liftIO $ runInBase $ DB.transaction $ DB.insert "beta" (66::Int)
+  return ()
