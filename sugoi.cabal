@@ -34,4 +34,4 @@ executable             example-server
   main-is:             server.hs
 
   build-depends:       base
-                     , Sugoi
+                     , sugoi
