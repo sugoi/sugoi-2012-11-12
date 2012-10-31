@@ -2,18 +2,48 @@
 
 module Sugoi.Main where
 
-import Data.Default (def)
+import qualified Control.Distributed.Process as CH
+import qualified Control.Distributed.Process.Node as CH
+import qualified Control.Distributed.Process.Internal.Types as CH
+import           Control.Monad.IO.Class (liftIO)
+import           Data.Default (def)
 import qualified Database.Curry as DB
 import qualified Database.Curry.Storage as DB
+import qualified Network.Transport as NT
+import qualified Network.Transport.TCP as NTT
+import           System.Environment
 
+
+rtable :: CH.RemoteTable
+rtable = CH.initRemoteTable
 
 
 dbConf :: DB.Config
 dbConf = def { DB.configPath = Just "sugoi.db" }
 
+type SugoiM v = DB.DBMT v CH.Process
+
 defaultMain :: IO ()
 defaultMain = do
-  putStrLn "hello this is server"
-  DB.runDBMT dbConf $ do
-    DB.transaction $ DB.insert "foo" (123::Int)
-    DB.saveToFile
+  argv <- getArgs
+  case argv of
+    [host,port] -> do
+      ret <- NTT.createTransport host port NTT.defaultTCPParameters
+      case ret of
+        Left err -> print err
+        Right transport -> do
+          localNode <- CH.newLocalNode transport rtable
+          CH.runProcess localNode $ DB.runDBMT server
+
+
+
+server :: SugoiM Int ()
+server = do
+  liftIO $ putStrLn "hello this is server"
+--   DB.runDBMT dbConf $ do
+--     DB.transaction $ DB.insert "foo" (65::Int)
+--   DB.runDBMT dbConf $ do
+--     DB.transaction $ DB.insert "bar" (67::Int)
+--   DB.runDBMT dbConf $ do
+--     DB.transaction $ DB.insert "baz" (68::Int)
+--     DB.saveToFile
