@@ -2,7 +2,7 @@
 module Sugoi.Types where
 
 import          Data.Data
-import          Data.Binary
+
 
 data Problem a b = Problem
   deriving (Eq, Show)
@@ -17,3 +17,5 @@ class ProblemClass p where
 instance ProblemClass (Problem a b) where
   type Input (Problem a b)  = a
   type Output (Problem a b) = b
+
+ 

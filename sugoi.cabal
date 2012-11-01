@@ -20,7 +20,8 @@ library
                        Sugoi.Main
                        Sugoi.Types
   extensions:          TypeFamilies                     
-  ghc-options:         -Wall -O3 
+  ghc-options:         -Wall -O3 -fno-warn-unused-do-bind
+
 
   build-depends:       base >=4.5
                      , binary
