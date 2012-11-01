@@ -5,6 +5,7 @@ module Sugoi.Main where
 import qualified Control.Distributed.Process as CH
 import qualified Control.Distributed.Process.Node as CH
 import qualified Control.Distributed.Process.Internal.Types as CH
+import           Control.Monad
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Trans.Control
 import           Data.Default (def)
@@ -14,6 +15,7 @@ import qualified Network.Transport as NT
 import qualified Network.Transport.TCP as NTT
 import           System.Environment
 
+import Sugoi.Types
 
 rtable :: CH.RemoteTable
 rtable = CH.initRemoteTable
@@ -38,10 +40,18 @@ defaultMain = do
 
 
 
-server :: (RunInBase (DB.DBMT Int IO) IO) -> CH.Process ()
+server :: (RunInBase (DB.DBMT (Maybe Int) IO) IO) -> CH.Process ()
 server runInBase = do
+  let trans = liftIO . runInBase . DB.transaction
   liftIO $ putStrLn "hello this is server"
-  liftIO $ runInBase $ DB.transaction $ DB.insert "alpha" (65::Int)
-  liftIO $ putStrLn "hello this is server 2"
-  liftIO $ runInBase $ DB.transaction $ DB.insert "beta" (66::Int)
-  return ()
+  (sendQPort, recvQPort) <- CH.newChan
+  (sendAPort, recvAPort) <- CH.newChan
+  forever $ do
+    key <- CH.receiveChan recvQPort
+    trans $ do
+      maybeVal <- DB.lookup key
+      case maybeVal of
+        Nothing -> DB.insert key Nothing
+        _       -> return ()
+    (key,val) <- CH.receiveChan recvAPort
+    trans $ DB.insert key (Just val)

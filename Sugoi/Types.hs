@@ -1,7 +1,13 @@
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DeriveDataTypeable, KindSignatures, StandaloneDeriving #-}
 module Sugoi.Types where
 
+import          Data.Data
+import          Data.Binary
+
 data Problem a b = Problem
+  deriving (Eq, Show)
+
+deriving instance Typeable2 Problem
 
 class ProblemClass p where
   type Input p  :: *
