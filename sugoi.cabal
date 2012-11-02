@@ -24,6 +24,7 @@ library
 
 
   build-depends:       base >=4.5
+                     , base64-bytestring
                      , binary
                      , bytestring
                      , CurryDB >= 0.1
