@@ -25,12 +25,17 @@ instance ProblemClass (Problem a b) where
   type Input (Problem a b)  = a
   type Output (Problem a b) = b
 
--- type AT =  (RunInBase (DB.DBMT (Maybe Int) IO) IO)
+type RIB =  (RunInBase (DB.DBMT (Maybe Int) IO) IO)
 
 data NetworkState = NetworkState
-  { _runDB :: forall a. IO a -> Maybe a
+  { _runDB :: RIB
   , _nodeName :: String
   }
  
-
 $( nameMakeLens ''NetworkState lensNamingRule)
+
+runDB :: Lens NetworkState RIB
+runDB = lens (f::NetworkState -> RIB) (\x s -> s { _runDB = x }) 
+  where f :: NetworkState -> RIB
+        f (NetworkState{_runDB = x}) = x
+        
