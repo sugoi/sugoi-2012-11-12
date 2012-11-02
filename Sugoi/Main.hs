@@ -11,6 +11,7 @@ import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
 import qualified Control.Monad.Trans.State.Strict as State
 import           Data.Default (def)
+import           Data.Lens
 import qualified Database.Curry as DB
 import qualified Database.Curry.Storage as DB
 import qualified Network.Transport.TCP as NTT
@@ -38,8 +39,8 @@ defaultMain = do
           Right transport -> do
             localNode <- CH.newLocalNode transport rtable
             let initState = NetworkState
-                            { runDB = runInBase
-                            , nodeName = "Anthony"
+                            { _runDB = RIB runInBase
+                            , _nodeName = "Anthony"
                             }
             CH.runProcess localNode $ State.evalStateT server initState
       _ -> putStrLn "give me host and port"
@@ -47,12 +48,13 @@ defaultMain = do
 
 server :: State.StateT NetworkState CH.Process ()
 server = do
-  runInBase <- runDB <$> State.get
+  (RIB runInBase) <- access runDB
   let trans = liftIO . runInBase . DB.transaction
-  liftIO $ putStrLn "hello this is server"
+  me <- access nodeName
+  liftIO $ putStrLn $ "hello this is server " ++ me
   (sendQPort, recvQPort) <- lift $ CH.newChan
   (sendAPort, recvAPort) <- lift $ CH.newChan
-  forever $ do
+  when False $ forever $ do
     key <- lift $ CH.receiveChan recvQPort
     trans $ do
       maybeVal <- DB.lookup key
