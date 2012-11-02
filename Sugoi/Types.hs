@@ -22,6 +22,7 @@ type instance Question (Solver q a)  = q
 type instance Answer (Solver q a) = a
 type instance Solution (Solver q a) = (q,a)
 
+
 newtype RIB a = RIB (RunInBase (DB.DBMT (Maybe a) IO) IO)
 
 

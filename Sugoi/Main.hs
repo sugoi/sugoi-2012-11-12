@@ -48,7 +48,7 @@ defaultMain = do
       _ -> putStrLn "give me host and port"
 
 
-server :: State.StateT (NetworkState (Solver BS.ByteString Int)) CH.Process ()
+server :: State.StateT (NetworkState (BS.ByteString Int)) CH.Process ()
 server = do
   (RIB runInBase) <- access runDB
   let trans = liftIO . runInBase . DB.transaction
