@@ -2,6 +2,7 @@
 
 module Sugoi.Main where
 
+
 import           Control.Applicative
 import qualified Control.Distributed.Process as CH
 import qualified Control.Distributed.Process.Node as CH
@@ -10,6 +11,7 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.ByteString as BS
 import           Data.Default (def)
 import           Data.Lens
 import qualified Database.Curry as DB
@@ -46,7 +48,7 @@ defaultMain = do
       _ -> putStrLn "give me host and port"
 
 
-server :: State.StateT NetworkState CH.Process ()
+server :: State.StateT (NetworkState (Solver BS.ByteString Int)) CH.Process ()
 server = do
   (RIB runInBase) <- access runDB
   let trans = liftIO . runInBase . DB.transaction

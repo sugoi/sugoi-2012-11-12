@@ -9,26 +9,24 @@ import           Data.Lens.Template ( makeLenses )
 import qualified Database.Curry as DB
 
 
-data Solver a b = Solver
+data Solver typeQ typeA = Solver
   deriving (Eq, Show)
 
 deriving instance Typeable2 Solver
 
-class SolverClass p where
-  type Question p  :: *
-  type Answer p :: *
-  type Solution p :: *
-  
+type family Question p :: *
+type family Answer   p :: *
+type family Solution p :: *
 
-instance SolverClass (Solver a b) where
-  type Question (Solver a b)  = a
-  type Answer (Solver a b) = b
-  type Solution (Solver a b) = (a,b)
+type instance Question (Solver q a)  = q
+type instance Answer (Solver q a) = a
+type instance Solution (Solver q a) = (q,a)
 
-newtype RIB = RIB (RunInBase (DB.DBMT (Maybe Int) IO) IO)
+newtype RIB a = RIB (RunInBase (DB.DBMT (Maybe a) IO) IO)
 
-data NetworkState = NetworkState
-  { _runDB :: RIB
+
+data NetworkState solver = NetworkState
+  { _runDB :: RIB (Answer solver)
   , _nodeName :: String
   }
  
