@@ -6,6 +6,7 @@ module Sugoi.Main where
 import qualified Control.Distributed.Process as CH
 import qualified Control.Distributed.Process.Node as CH
 import qualified Control.Distributed.Process.Serializable as CH
+import           Control.Monad
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
@@ -65,26 +66,43 @@ type NewChan a = CH.Process (CH.SendPort a, CH.ReceivePort a)
 masterProcess :: forall problem . (CH.Serializable (Question problem), CH.Serializable (Answer problem))
        => State.StateT (ServerState problem) CH.Process ()
 masterProcess = do
-  (RIB runInBase) <- access runDB
-  let trans = liftIO . runInBase . DB.transaction
+  (sendWorkerPort, recvWorkerPort) <- lift $ CH.newChan
+  (sendSolPort, recvSolPort) <- lift $ (CH.newChan :: NewChan (Solution problem))
 
-  (sendSlavePort, recvSlavePort) <- lift $ CH.newChan
-  (sendSolPort, recvSolPort)     <- lift $
-    (CH.newChan :: NewChan (Solution problem))
+  spawnLocalS $ questionSender recvWorkerPort sendSolPort
+  spawnLocalS $ solutionCollector recvSolPort
 
   liftIO $ do
-    BS.hPutStrLn stderr $ BS.unwords ["master waiting at ", encode64 sendSlavePort]
+    BS.hPutStrLn stderr $ BS.unwords ["master recruiting at ", encode64 sendWorkerPort]
     hFlush stderr
+  x <- lift $ CH.expect
+  return x
 
-  let question :: Question problem
-      question = Bin.decode "foobar"
 
-  slaveP <- lift $ CH.receiveChan recvSlavePort
-  lift           $ CH.sendChan slaveP (question,sendSolPort)
-  sol <- lift $ CH.receiveChan recvSolPort
-  let (que,ans) = sol
-      key = BSS.concat $ BS.toChunks $ Bin.encode que
+  where
+    questionSender recvWorkerPort sendSolPort = forever $ do
+      let question :: Question problem
+          question = Bin.decode "foobar"
 
-  trans $ do
-    DB.insert key (Just ans)
-  return ()
+      workerP <- lift $ CH.receiveChan recvWorkerPort
+      lift           $ CH.sendChan workerP (question,sendSolPort)
+
+    solutionCollector recvSolPort = forever $ do
+      sol <- lift $ CH.receiveChan recvSolPort
+      let (que,ans) = sol
+          key = BSS.concat $ BS.toChunks $ Bin.encode que
+
+      trans $ do
+        DB.insert key (Just ans)
+      return ()
+
+    trans dbm = do
+      (RIB runInBase) <- access runDB
+      liftIO . runInBase . DB.transaction $ dbm
+
+
+
+spawnLocalS :: State.StateT s CH.Process () ->  State.StateT s CH.Process CH.ProcessId
+spawnLocalS proc = do
+  s <- State.get
+  lift $ CH.spawnLocal $ State.evalStateT proc s
