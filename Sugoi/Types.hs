@@ -9,19 +9,21 @@ import           Data.Lens.Template ( makeLenses )
 import qualified Database.Curry as DB
 
 
-data Problem a b = Problem
+data Solver a b = Solver
   deriving (Eq, Show)
 
-deriving instance Typeable2 Problem
+deriving instance Typeable2 Solver
 
-class ProblemClass p where
-  type Input p  :: *
-  type Output p :: *
+class SolverClass p where
+  type Question p  :: *
+  type Answer p :: *
+  type Solution p :: *
   
 
-instance ProblemClass (Problem a b) where
-  type Input (Problem a b)  = a
-  type Output (Problem a b) = b
+instance SolverClass (Solver a b) where
+  type Question (Solver a b)  = a
+  type Answer (Solver a b) = b
+  type Solution (Solver a b) = (a,b)
 
 newtype RIB = RIB (RunInBase (DB.DBMT (Maybe Int) IO) IO)
 
