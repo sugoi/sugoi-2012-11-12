@@ -25,12 +25,11 @@ type Solution p = (Question p, Answer p)
 newtype RIB a = RIB (RunInBase (DB.DBMT (Maybe a) IO) IO)
 
 
-data NetworkState solver = NetworkState
+data ServerState solver = ServerState
   { _runDB :: RIB (Answer solver)
-  , _nodeName :: String
   }
  
-$( makeLenses [''NetworkState])
+$( makeLenses [''ServerState])
 
 
         

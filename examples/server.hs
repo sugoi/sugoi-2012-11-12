@@ -1,4 +1,5 @@
+import Sugoi.Types (Problem(..))
 import Sugoi.Main
 
 main :: IO ()
-main = defaultMain
+main = masterMain (undefined :: Problem [Int] Integer)

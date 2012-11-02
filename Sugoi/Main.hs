@@ -3,11 +3,9 @@
 
 module Sugoi.Main where
 
-import           Control.Applicative
 import qualified Control.Distributed.Process as CH
 import qualified Control.Distributed.Process.Node as CH
 import qualified Control.Distributed.Process.Serializable as CH
-import           Control.Monad
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
@@ -21,6 +19,7 @@ import           Data.Lens
 import qualified Database.Curry as DB
 import qualified Network.Transport.TCP as NTT
 import           System.Environment
+import           System.IO
 
 import Sugoi.Types
 
@@ -41,8 +40,9 @@ dbConf :: DB.Config
 dbConf = def { DB.configPath = Just "sugoi.db" }
 
 
-defaultMain :: IO ()
-defaultMain = do
+masterMain :: forall problem. (CH.Serializable (Question problem), CH.Serializable (Answer problem))
+           => problem -> IO ()
+masterMain _ = do
   DB.runDBMT dbConf $ liftBaseWith $ \runInBase -> do
     argv <- getArgs
     case argv of
@@ -52,30 +52,31 @@ defaultMain = do
           Left err -> print err
           Right transport -> do
             localNode <- CH.newLocalNode transport rtable
-            let initState :: NetworkState (Problem Integer Int)
-                initState = NetworkState
+            let initState :: ServerState problem
+                initState = ServerState
                           { _runDB = RIB runInBase
-                          , _nodeName = "Anthony"
                           }
-            CH.runProcess localNode $ State.evalStateT server initState
+            CH.runProcess localNode $ State.evalStateT masterProcess initState
       _ -> putStrLn "give me host and port"
 
 
 type NewChan a = CH.Process (CH.SendPort a, CH.ReceivePort a)
 
-server :: forall solver . (CH.Serializable (Question solver), CH.Serializable (Answer solver))
-       => State.StateT (NetworkState solver) CH.Process ()
-server = do
+masterProcess :: forall problem . (CH.Serializable (Question problem), CH.Serializable (Answer problem))
+       => State.StateT (ServerState problem) CH.Process ()
+masterProcess = do
   (RIB runInBase) <- access runDB
   let trans = liftIO . runInBase . DB.transaction
 
   (sendSlavePort, recvSlavePort) <- lift $ CH.newChan
   (sendSolPort, recvSolPort)     <- lift $
-    (CH.newChan :: NewChan (Solution solver))
+    (CH.newChan :: NewChan (Solution problem))
 
-  liftIO $ BS.putStrLn $ BS.unwords ["Master waiting at ", encode64 sendSlavePort]
+  liftIO $ do
+    BS.hPutStrLn stderr $ BS.unwords ["master waiting at ", encode64 sendSlavePort]
+    hFlush stderr
 
-  let question :: Question solver
+  let question :: Question problem
       question = Bin.decode "foobar"
 
   slaveP <- lift $ CH.receiveChan recvSlavePort
