@@ -27,6 +27,9 @@ library
                      , binary
                      , CurryDB >= 0.1
                      , data-default
+                     , data-lens
+                     , data-lens-fd
+                     , data-lens-template
                      , distributed-process >= 0.4
                      , monad-control
                      , network-transport >= 0.3

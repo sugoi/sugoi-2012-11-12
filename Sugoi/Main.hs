@@ -26,12 +26,6 @@ dbConf :: DB.Config
 dbConf = def { DB.configPath = Just "sugoi.db" }
 
 
-data NodeState = NodeState
-  { runDB :: RunInBase (DB.DBMT (Maybe Int) IO) IO
-  , nodeName :: String
-  }
-
-
 defaultMain :: IO ()
 defaultMain = do
   DB.runDBMT dbConf $ liftBaseWith $ \runInBase -> do
@@ -43,7 +37,7 @@ defaultMain = do
           Left err -> print err
           Right transport -> do
             localNode <- CH.newLocalNode transport rtable
-            let initState = NodeState
+            let initState = NetworkState
                             { runDB = runInBase
                             , nodeName = "Anthony"
                             }
@@ -51,7 +45,7 @@ defaultMain = do
       _ -> putStrLn "give me host and port"
 
 
-server :: State.StateT NodeState CH.Process ()
+server :: State.StateT NetworkState CH.Process ()
 server = do
   runInBase <- runDB <$> State.get
   let trans = liftIO . runInBase . DB.transaction
