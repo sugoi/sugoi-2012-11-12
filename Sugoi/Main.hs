@@ -1,4 +1,5 @@
-{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, MultiParamTypeClasses,
+    OverloadedStrings, RankNTypes #-}
 
 module Sugoi.Main where
 
@@ -6,6 +7,7 @@ module Sugoi.Main where
 import           Control.Applicative
 import qualified Control.Distributed.Process as CH
 import qualified Control.Distributed.Process.Node as CH
+import qualified Control.Distributed.Process.Serializable as CH
 import           Control.Monad
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Trans.Class
@@ -40,15 +42,16 @@ defaultMain = do
           Left err -> print err
           Right transport -> do
             localNode <- CH.newLocalNode transport rtable
-            let initState = NetworkState
-                            { _runDB = RIB runInBase
-                            , _nodeName = "Anthony"
-                            }
+            let initState :: NetworkState (Solver BS.ByteString Int)
+                initState = NetworkState
+                          { _runDB = RIB runInBase
+                          , _nodeName = "Anthony"
+                          }
             CH.runProcess localNode $ State.evalStateT server initState
       _ -> putStrLn "give me host and port"
 
 
-server :: State.StateT (NetworkState (BS.ByteString Int)) CH.Process ()
+server :: (CH.Serializable (Answer solver)) => State.StateT (NetworkState solver) CH.Process ()
 server = do
   (RIB runInBase) <- access runDB
   let trans = liftIO . runInBase . DB.transaction
