@@ -17,7 +17,9 @@ beautyFilter :: Int -> Proxy Int () Int (Maybe Int)   IO ()
                                                      A  |
                                                      |  V
                                ints :: () -> Client Int ()   IO ()
-
+                                               A
+                                               |
+                            runSession inserts () here
 -}
 
 ints :: () -> Client Int ()   IO ()
