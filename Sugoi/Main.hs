@@ -66,8 +66,11 @@ type NewChan a = CH.Process (CH.SendPort a, CH.ReceivePort a)
 masterProcess :: forall problem . (CH.Serializable (Question problem), CH.Serializable (Answer problem))
        => State.StateT (ServerState problem) CH.Process ()
 masterProcess = do
-  (sendWorkerPort, recvWorkerPort) <- lift $ CH.newChan
-  (sendSolPort, recvSolPort) <- lift $ (CH.newChan :: NewChan (Solution problem))
+  (sendWorkerPort, recvWorkerPort) <- lift $
+    (CH.newChan :: NewChan
+      (CH.SendPort (Question problem, CH.SendPort (Solution problem))))
+  (sendSolPort, recvSolPort) <- lift $
+    (CH.newChan :: NewChan (Solution problem))
 
   spawnLocalS $ questionSender recvWorkerPort sendSolPort
   spawnLocalS $ solutionCollector recvSolPort
