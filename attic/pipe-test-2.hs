@@ -8,13 +8,13 @@ import Control.Proxy.Prelude.Base
 {-
 
 printer ::     Int -> Server Int ()   IO ()
-                              ^  |
+                              A  |
                               |  V
 beautyFilter :: Int -> Proxy Int () Int (Maybe Int)   IO ()
-                                     ^     |
+                                     A     |
                                      |     V
            improver :: Int -> Proxy Int (Maybe Int) Int ()   IO ()
-                                                     ^  |
+                                                     A  |
                                                      |  V
                                ints :: () -> Client Int ()   IO ()
 
