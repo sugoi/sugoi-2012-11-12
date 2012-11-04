@@ -5,10 +5,25 @@ import Control.Monad.Trans
 import Control.Proxy
 import Control.Proxy.Prelude.Base
 
+{-
+
+printer ::     Int -> Server Int ()   IO ()
+                              ^  |
+                              |  V
+beautyFilter :: Int -> Proxy Int () Int (Maybe Int)   IO ()
+                                     ^     |
+                                     |     V
+           improver :: Int -> Proxy Int (Maybe Int) Int ()   IO ()
+                                                     ^  |
+                                                     |  V
+                               ints :: () -> Client Int ()   IO ()
+
+-}
+
 ints :: () -> Client Int ()   IO ()
 ints () = fromListC [1..] ()
 
-printer :: Int -> Server Int ()   IO ()
+
 printer x = do
   lift $ putStrLn $ "printing " ++ show x
   respond () >>= printer
