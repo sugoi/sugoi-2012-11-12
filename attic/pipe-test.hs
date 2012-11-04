@@ -3,14 +3,13 @@
 import Control.Monad
 import Control.Monad.Trans
 import Control.Proxy
-import Control.Proxy.Pipe
 import Control.Proxy.Prelude.Base
 
-ints :: Producer Integer IO ()
-ints = forM_ [1..] $ yield
+ints :: () -> Server () Integer IO ()
+ints = const $ fromListS [1..] ()
 
-printer :: Consumer Integer IO ()
-printer = forever $ await >>= (lift . print)
+printer :: () -> Client () Integer IO ()
+printer = const $ forever $ await >>= (lift . print)
 
 main :: IO ()
-main = runPipe $ ints >+> printer
+main = runSession $ ints >-> takeB_ 10 >-> printer
