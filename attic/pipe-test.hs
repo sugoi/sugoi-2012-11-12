@@ -12,4 +12,4 @@ printer :: () -> Client () Integer IO ()
 printer = const $ forever $ await >>= (lift . print)
 
 main :: IO ()
-main = runSession $ ints >-> takeB_ 10 >-> printer
+main = runSession $ ints >-> filterD even >-> takeB_ 10 >-> printer
