@@ -91,7 +91,6 @@ masterProcess = do
         ks <- DB.keys
         ks $$ await
 
-
       qRef <- liftIO $ newIORef (Nothing :: Maybe (Question problem))
 
       (RIB runInBase) <- access runDB
@@ -100,10 +99,12 @@ masterProcess = do
         liftIO $ writeIORef qRef $
           (Bin.decode . BS.fromChunks . (:[])) <$> q3
 
-      Just question <- liftIO $ readIORef qRef
-
-      workerP <- lift $ CH.receiveChan recvWorkerPort
-      lift            $ CH.sendChan workerP (question,sendSolPort)
+      q4 <- liftIO $ readIORef qRef
+      case q4 of
+        Nothing -> return ()
+        Just question -> do
+          workerP <- lift $ CH.receiveChan recvWorkerPort
+          lift            $ CH.sendChan workerP (question,sendSolPort)
 
     solutionCollector recvSolPort = forever $ do
       sol <- lift $ CH.receiveChan recvSolPort
