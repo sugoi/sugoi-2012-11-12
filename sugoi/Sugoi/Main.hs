@@ -3,6 +3,7 @@
 
 module Sugoi.Main where
 
+import           Control.Applicative
 import qualified Control.Distributed.Process as CH
 import qualified Control.Distributed.Process.Node as CH
 import qualified Control.Distributed.Process.Serializable as CH
@@ -17,6 +18,7 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import qualified Data.ByteString.Base64.Lazy as Base64
 import           Data.Conduit
 import           Data.Default (def)
+import           Data.IORef
 import           Data.Lens
 import qualified Database.Curry as DB
 import qualified Network.Transport.TCP as NTT
@@ -90,9 +92,15 @@ masterProcess = do
         ks $$ await
 
 
+      qRef <- liftIO $ newIORef (Nothing :: Maybe (Question problem))
 
-      let question :: Question problem
-          question = undefined
+      (RIB runInBase) <- access runDB
+      liftIO . runInBase $ do
+        q3 <- restoreM q2
+        liftIO $ writeIORef qRef $
+          (Bin.decode . BS.fromChunks . (:[])) <$> q3
+
+      Just question <- liftIO $ readIORef qRef
 
       workerP <- lift $ CH.receiveChan recvWorkerPort
       lift            $ CH.sendChan workerP (question,sendSolPort)
