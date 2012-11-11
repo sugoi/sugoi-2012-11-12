@@ -27,6 +27,7 @@ library
                      , base64-bytestring
                      , binary
                      , bytestring
+                     , conduit                    
                      , CurryDB >= 0.1
                      , data-default
                      , data-lens

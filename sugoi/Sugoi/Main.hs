@@ -15,6 +15,7 @@ import qualified Data.Binary as Bin
 import qualified Data.ByteString.Char8 as BSS
 import qualified Data.ByteString.Lazy.Char8 as BS
 import qualified Data.ByteString.Base64.Lazy as Base64
+import           Data.Conduit
 import           Data.Default (def)
 import           Data.Lens
 import qualified Database.Curry as DB
@@ -84,19 +85,24 @@ masterProcess = do
 
   where
     questionSender recvWorkerPort sendSolPort = forever $ do
+      q2 <- trans $ do
+        ks <- DB.keys
+        ks $$ await
+
+
+
       let question :: Question problem
-          question = Bin.decode "foobar"
+          question = undefined
 
       workerP <- lift $ CH.receiveChan recvWorkerPort
-      lift           $ CH.sendChan workerP (question,sendSolPort)
+      lift            $ CH.sendChan workerP (question,sendSolPort)
 
     solutionCollector recvSolPort = forever $ do
       sol <- lift $ CH.receiveChan recvSolPort
       let (que,ans) = sol
           key = BSS.concat $ BS.toChunks $ Bin.encode que
 
-      trans $ do
-        DB.insert key (Just ans)
+      trans $ DB.insert key (Just ans)
       return ()
 
     trans dbm = do
