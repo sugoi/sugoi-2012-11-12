@@ -2,4 +2,4 @@ import Sugoi.Types (Problem(..))
 import Sugoi.Main
 
 main :: IO ()
-main = masterMain (undefined :: Problem Integer [Integer])
+main = masterMain (Problem :: Problem Integer [Integer])

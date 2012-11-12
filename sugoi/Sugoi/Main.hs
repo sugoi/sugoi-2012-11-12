@@ -164,9 +164,10 @@ spawnLocalS proc = do
   lift $ CH.spawnLocal $ State.evalStateT proc s
 
 workerMain :: forall problem . (CH.Serializable (Question problem), CH.Serializable (Answer problem))
-       => (Question problem -> IO (Answer problem))
+       => problem
+       -> (Question problem -> IO (Answer problem))
        -> IO ()
-workerMain solveIO = runTCPProcess1 $ \addr -> do
+workerMain _ solveIO = runTCPProcess1 $ \addr -> do
   let sendWorkerPort :: Sp (Sp (Question problem, Sp (Solution problem)))
       sendWorkerPort = Bin.decode addr
   (sendPort1, recvPort1) <- CH.newChan :: NewChan (Question problem, Sp (Solution problem))
@@ -180,9 +181,10 @@ workerMain solveIO = runTCPProcess1 $ \addr -> do
     CH.sendChan sendBackPort (question, answer)
 
 questionerMain :: forall problem . (CH.Serializable (Question problem), CH.Serializable (Answer problem))
-       => [Question problem]
+       => problem
+       -> [Question problem]
        -> IO ()
-questionerMain qs = runTCPProcess1 $ \addr -> do
+questionerMain _ qs = runTCPProcess1 $ \addr -> do
   let sendQuestionPort :: Sp (Question problem)
       sendQuestionPort = Bin.decode addr
   forM_ qs $ CH.sendChan sendQuestionPort
