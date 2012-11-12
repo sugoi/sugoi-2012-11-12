@@ -48,3 +48,20 @@ executable             example-server
 
   build-depends:       base
                      , sugoi
+
+executable             example-worker
+  ghc-options:         -Wall -O3 
+  hs-source-dirs:      examples/
+  main-is:             worker.hs
+
+  build-depends:       base
+                     , sugoi
+
+executable             example-questioner
+  ghc-options:         -Wall -O3 
+  hs-source-dirs:      examples/
+  main-is:             questioner.hs
+
+  build-depends:       base
+                     , sugoi
+
