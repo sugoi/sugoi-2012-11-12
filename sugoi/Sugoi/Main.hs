@@ -168,12 +168,16 @@ workerMain :: forall problem . (CH.Serializable (Question problem), CH.Serializa
        -> (Question problem -> IO (Answer problem))
        -> IO ()
 workerMain _ solveIO = runTCPProcess1 $ \addr -> do
+  liftIO $ putStrLn "hajimaruyo"
   let sendWorkerPort :: Sp (Sp (Question problem, Sp (Solution problem)))
       sendWorkerPort = Bin.decode addr
   (sendPort1, recvPort1) <- CH.newChan :: NewChan (Question problem, Sp (Solution problem))
   forever $ do
+    liftIO $ putStrLn "okuruyo"
     CH.sendChan sendWorkerPort sendPort1
+    liftIO $ putStrLn "matsuyo"
     pair1 <- CH.receiveChan recvPort1
+    liftIO $ putStrLn "kitayo"
     let question :: Question problem
         sendBackPort :: Sp (Solution problem)
         (question, sendBackPort) = pair1
